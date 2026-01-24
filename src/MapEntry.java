@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class MapEntry <K, V> {
     final K key;
     V value;
@@ -17,9 +19,11 @@ public class MapEntry <K, V> {
 
     @Override
     public String toString() {
-        return "\nNew Entry:\n" +
-                "\tkey:\t" + key +
-                "\tvalue:\t" + value +
-                "\thash:\t" + hash;
+        return String.format(
+                "\nNew Entry:\n\tkey:\t%s\n\tvalue:\t%s\n\thash:\t%d",
+                Objects.toString(key, "null"),
+                Objects.toString(value, "null"),
+                hash
+        );
     }
 }
