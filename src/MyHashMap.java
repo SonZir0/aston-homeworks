@@ -2,11 +2,12 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class MyHashMap<K, V> {
+    static final int DEFAULT_STARTING_CAPACITY = 16;
+    static final double LOAD_FACTOR = 0.75;
 
     private MapEntry<K, V>[] data;
     private int size = 0;
     private int currentCapacity;
-    private double loadFactor = 0.75;
 
     public MyHashMap(int startingCapacity) {
         if (startingCapacity < 0)
@@ -17,13 +18,13 @@ public class MyHashMap<K, V> {
     }
 
     public MyHashMap() {
-        this(16);
+        this(DEFAULT_STARTING_CAPACITY);
     }
 
     // Возвращаем старое значение V, если ключ существует, и мы обновили значение. В противном случае - null.
     public V put(K key, V value) {
         int hash = calcHash(key);
-        if ((size + 1) > (currentCapacity * loadFactor))
+        if ((size + 1) > (currentCapacity * LOAD_FACTOR))
             resize();
 
         V temp = putNodeLogic(key, value, hash);
@@ -94,7 +95,7 @@ public class MyHashMap<K, V> {
     }
 
     private void resize() {
-        if (currentCapacity == 0) currentCapacity = 2;
+        if (currentCapacity == 0) currentCapacity = 1;
         else currentCapacity = currentCapacity << 1;
 
         MapEntry<K, V>[] entryArr = getEntryArray();
