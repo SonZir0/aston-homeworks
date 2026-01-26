@@ -2,8 +2,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class MyHashMap<K, V> {
-    public static final String NULL_KEY_ARG = "Сделаем вид, что эта хэшмапа null ключи не допускает." +
-            " Если надо доделать - укажите.";
 
     private MapEntry<K, V>[] data;
     private int size = 0;
@@ -90,15 +88,9 @@ public class MyHashMap<K, V> {
         return null;
     }
 
-    /* "Хэш" просто зануляет старший бит, отвечающий за знак.
-     * Например, если использовать целочисленный ключ, то неизменное значение станет хэшом.
-     * Сделано намеренно, чтобы проще было подобрать коллизии для теста resize() и перераспределения нод в бакеты.
-     * Если надо переделать - укажите.
-     */
     private int calcHash(K key) {
-        if (key == null)
-            throw new IllegalArgumentException(NULL_KEY_ARG);
-        return key.hashCode() & 0x7fffffff;
+        int objHash;
+        return (key == null) ? 0 : (objHash = key.hashCode()) ^ (objHash >>> 16);
     }
 
     private void resize() {
