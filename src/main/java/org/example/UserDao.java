@@ -51,7 +51,6 @@ public class UserDao implements Dao<User> {
     }
 
     public void dbSingularOperationLogic(User user, BiConsumer<Session, User> dbOperation) {
-        if (user == null) return;
         Session session = null;
         Transaction tx = null;
 
@@ -61,7 +60,7 @@ public class UserDao implements Dao<User> {
             dbOperation.accept(session, user);
             session.getTransaction().commit();
         } catch (RuntimeException e) {
-            logger.error("Exception operating on entity {}\nError class: {}\nError message: {}"
+            logger.error("Exception operating on record {}\nError class: {}\nError message: {}"
                     , user, e.getClass(), e.getMessage());
             if (tx != null) tx.rollback();
             throw e;
