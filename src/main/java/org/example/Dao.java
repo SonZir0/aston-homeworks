@@ -1,16 +1,18 @@
 package org.example;
 
+import jakarta.persistence.EntityManager;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface Dao<T> {
-    void save(T t);
+    void save(EntityManager session, T t);
 
-    Optional<T> get(long id);
+    Optional<T> get(EntityManager session, long id);
 
-    List<T> getAll();
+    List<T> getAll(EntityManager session);
 
-    void update(T t);
+    void update(EntityManager session, T t);
 
-    void delete(T t);
+    void delete(EntityManager session, T t);
 }
