@@ -19,12 +19,13 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public UserDto addNewUser(User user) {
+    public UserDto addNewUser(UserDto newUserData) {
         return UserDto.fromEntity(
-                userRepository.save(Objects.requireNonNull(user)));
+                userRepository.save(
+                        new User(Objects.requireNonNull(newUserData))));
     }
 
-    public Optional<UserDto> updateUserWithId(long id, User newUserData) {
+    public Optional<UserDto> updateUserWithId(long id, UserDto newUserData) {
         return userRepository.findById(id).
                 map((user) -> {
                     user.updateWithValuesFrom(Objects.requireNonNull(newUserData));
@@ -33,13 +34,13 @@ public class UserService {
     }
 
     public Optional<UserDto> findUserById(long id) {
-        return userRepository.findById(id).
-                map(UserDto::fromEntity);
+        return userRepository.findById(id)
+                .map(UserDto::fromEntity);
     }
 
     public List<UserDto> getListOfUsers() {
-        return userRepository.findAll().stream().
-                map(UserDto::fromEntity).
+        return userRepository.findAll().stream()
+                .map(UserDto::fromEntity).
                 toList();
     }
 

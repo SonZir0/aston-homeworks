@@ -1,9 +1,8 @@
-package org.example;
+package org.example.service;
 
 import org.example.dto.UserDto;
 import org.example.models.User;
 import org.example.repository.UserRepository;
-import org.example.service.UserService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,9 +49,9 @@ class UserServiceTest {
     @Test
     void addNewUser_CallsSaveMethod() {
         when(mockUserRepository.save(any())).thenReturn(testUserArr[0]);
-        userService.addNewUser(testUserArr[0]);
-        userService.addNewUser(testUserArr[2]);
-        userService.addNewUser(testUserArr[3]);
+        userService.addNewUser(UserDto.fromEntity(testUserArr[0]));
+        userService.addNewUser(UserDto.fromEntity(testUserArr[2]));
+        userService.addNewUser(UserDto.fromEntity(testUserArr[3]));
         verify(mockUserRepository, times(3)).save(any(User.class));
     }
 
@@ -81,8 +80,8 @@ class UserServiceTest {
     void updateUserRecord_CallsUpdateMethod() {
         when(mockUserRepository.findById(any())).thenReturn(Optional.of(testUserArr[0]));
         when(mockUserRepository.save(any())).thenReturn(testUserArr[0]);
-        userService.updateUserWithId(1L, testUserArr[0]);
-        userService.updateUserWithId(3L, testUserArr[2]);
+        userService.updateUserWithId(1L, UserDto.fromEntity(testUserArr[0]));
+        userService.updateUserWithId(3L, UserDto.fromEntity(testUserArr[2]));
         verify(mockUserRepository, times(2)).save(any(User.class));
     }
 
