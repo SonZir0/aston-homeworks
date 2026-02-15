@@ -1,6 +1,8 @@
 package org.example.models;
 
 import jakarta.persistence.*;
+import org.example.dto.UserDto;
+
 import java.time.LocalDate;
 
 @Entity
@@ -21,21 +23,21 @@ public class User {
     }
 
     public User(String name, String email, int age) {
-        this(name, email, age, LocalDate.now());
-    }
-
-    public User(String name, String email, int age, LocalDate createdAt) {
         this.name = name;
         this.email = email;
         this.age = age;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDate.now();
     }
 
-    public void updateWithValuesFrom(User copyValuesFrom) {
+    public User(UserDto userDto) {
+        this(userDto.name(), userDto.email(), userDto.age());
+    }
+
+    public void updateWithValuesFrom(UserDto copyValuesFrom) {
         if (copyValuesFrom == null) throw new IllegalArgumentException();
-        this.name = copyValuesFrom.getName();
-        this.email = copyValuesFrom.getEmail();
-        this.age = copyValuesFrom.getAge();
+        this.name = copyValuesFrom.name();
+        this.email = copyValuesFrom.email();
+        this.age = copyValuesFrom.age();
     }
 
     public long getId() {
