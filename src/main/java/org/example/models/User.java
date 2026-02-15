@@ -1,4 +1,4 @@
-package org.example;
+package org.example.models;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -29,6 +29,13 @@ public class User {
         this.email = email;
         this.age = age;
         this.createdAt = createdAt;
+    }
+
+    public void updateWithValuesFrom(User copyValuesFrom) {
+        if (copyValuesFrom == null) throw new IllegalArgumentException();
+        this.name = copyValuesFrom.getName();
+        this.email = copyValuesFrom.getEmail();
+        this.age = copyValuesFrom.getAge();
     }
 
     public long getId() {
