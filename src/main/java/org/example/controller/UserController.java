@@ -1,6 +1,8 @@
 package org.example.controller;
 
-import org.example.dto.UserDto;
+import jakarta.validation.Valid;
+import org.example.dto.UserRequestDto;
+import org.example.dto.UserResponseDto;
 import org.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -18,28 +20,28 @@ public class UserController {
     }
 
     @PostMapping("users")
-    public UserDto addNewUser(@RequestBody UserDto newUserDto) {
+    public UserResponseDto addNewUser(@Valid @RequestBody UserRequestDto newUserDto) {
         return userService.addNewUser(newUserDto);
     }
 
     @PutMapping("users/{id}")
-    public UserDto updateUserRecord(@PathVariable(value = "id") long userId,
-                                            @RequestBody UserDto userData) {
+    public UserResponseDto updateUserRecord(@PathVariable(value = "id") long userId,
+                                            @Valid @RequestBody UserRequestDto userData) {
         return userService.updateUserWithId(userId, userData).orElse(null);
     }
 
     @GetMapping("users/{id}")
-    public UserDto findUserById(@PathVariable(value= "id") long userId) {
+    public UserResponseDto findUserById(@PathVariable(value= "id") long userId) {
         return userService.findUserById(userId).orElse(null);
     }
 
     @GetMapping("users")
-    public List<UserDto> getListOfUsers() {
+    public List<UserResponseDto> getListOfUsers() {
         return userService.getListOfUsers();
     }
 
     @DeleteMapping("users/{id}")
-    public void removeUserRecordById(@PathVariable(value = "id") long userId) {
-        userService.removeUserById(userId);
+    public UserResponseDto removeUserRecordById(@PathVariable(value = "id") long userId) {
+        return userService.getAndRemoveUserById(userId).orElse(null);
     }
 }

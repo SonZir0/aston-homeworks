@@ -3,16 +3,16 @@ package org.example.dto;
 import org.example.models.User;
 import java.time.LocalDate;
 
-public record UserDto (
+public record UserResponseDto(
         long id,
         String name,
         String email,
         int age,
         LocalDate createdAt) {
 
-    public static UserDto fromEntity(User user) {
+    public static UserResponseDto fromEntity(User user) {
         if (user == null) throw new IllegalArgumentException();
-        return new UserDto(
+        return new UserResponseDto(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
