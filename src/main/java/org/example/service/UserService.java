@@ -14,14 +14,18 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final EmailNotificationProducer msgProducer;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, EmailNotificationProducer msgProducer) {
         this.userRepository = userRepository;
+        this.msgProducer = msgProducer;
     }
 
     public UserResponseDto addNewUser(UserRequestDto newUserData) {
         User temp = userRepository.save( new User(Objects.requireNonNull(newUserData)) );
+        msgProducer.sendEmailNotification(temp.getEmail(),
+                "Здравствуйте! Ваш аккаунт на сайте был успешно создан.");
 
         return UserResponseDto.fromEntity(temp);
     }
@@ -49,6 +53,8 @@ public class UserService {
         return userRepository.findById(id)
                 .map((user -> {
                     userRepository.delete(user);
+                    msgProducer.sendEmailNotification( user.getEmail(),
+                            "Здравстувуйте! Ваш аккаунт был удален");
                     return UserResponseDto.fromEntity(user);
                 }));
     }
