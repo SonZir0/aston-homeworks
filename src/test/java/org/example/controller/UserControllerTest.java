@@ -1,6 +1,6 @@
 package org.example.controller;
 
-import org.example.dto.UserDto;
+import org.example.dto.UserResponseDto;
 import org.example.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -35,20 +35,20 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    UserDto[] testDataArr = {
-            new UserDto(
+    UserResponseDto[] testDataArr = {
+            new UserResponseDto(
                     1,
                     "Jane Schmidt",
                     "jane@schmidt",
                     25,
                     LocalDate.parse("2021-09-01")),
-            new UserDto(
-                    1,
+            new UserResponseDto(
+                    2,
                     "Mark Heckler",
                     "mark@heckler",
                     41,
                     LocalDate.parse("2011-12-12")),
-            new UserDto(
+            new UserResponseDto(
                     3,
                     "Kylo Ren",
                     "kylo@ren",
@@ -140,6 +140,6 @@ public class UserControllerTest {
         mockMvc.perform(delete("/api/users/2"))
                 .andExpect(status().isOk());
 
-        verify(userService, times(2)).removeUserById(2);
+        verify(userService, times(2)).getAndRemoveUserById(2);
     }
 }
