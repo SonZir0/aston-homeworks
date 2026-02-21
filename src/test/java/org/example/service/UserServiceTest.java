@@ -1,21 +1,20 @@
 package org.example.service;
 
-import org.example.dto.UserDto;
+import org.example.dto.UserRequestDto;
+import org.example.dto.UserResponseDto;
 import org.example.models.User;
 import org.example.repository.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,35 +23,36 @@ class UserServiceTest {
     private UserService userService;
     @Mock
     private UserRepository mockUserRepository;
+    @Mock
+    private EmailNotificationProducer mockMsgProducer;
 
-    private static User[] testUserArr;
+    private static UserRequestDto[] testUserArr;
 
     @BeforeAll
     public static void setTestData() {
-        testUserArr = new User[]{
-                new User("aaa", "a@a", 12),
-                new User("bbb", "b@b", 23),
-                new User("ccc", "c@c", 34),
-                new User("ddd", "d@d", 45)};
-        // создание для return'ов Dto требует наличия ID
-        ReflectionTestUtils.setField(testUserArr[0], "id", 1L);
-        ReflectionTestUtils.setField(testUserArr[1], "id", 2L);
-        ReflectionTestUtils.setField(testUserArr[2], "id", 3L);
-        ReflectionTestUtils.setField(testUserArr[3], "id", 4L);
-    }
-
-    @BeforeEach
-    void setUp() {
-        //userService = new UserService(mockUserRepository);
+        testUserArr = new UserRequestDto[]{
+                new UserRequestDto("aaa", "a@a", 12),
+                new UserRequestDto("bbb", "b@b", 23),
+                new UserRequestDto("ccc", "c@c", 34),
+                new UserRequestDto("ddd", "d@d", 45)};
     }
 
     @Test
     void addNewUser_CallsSaveMethod() {
-        when(mockUserRepository.save(any())).thenReturn(testUserArr[0]);
-        userService.addNewUser(UserDto.fromEntity(testUserArr[0]));
-        userService.addNewUser(UserDto.fromEntity(testUserArr[2]));
-        userService.addNewUser(UserDto.fromEntity(testUserArr[3]));
-        verify(mockUserRepository, times(3)).save(any(User.class));
+        when(mockUserRepository.save(any()))
+                .thenReturn(new User(testUserArr[0]));
+
+        userService.addNewUser(testUserArr[0]);
+        verify(mockUserRepository, times(1)).save(any());
+    }
+
+    @Test
+    void addNewUser_SendsMailIfUserIsAdded() {
+        when(mockUserRepository.save(any()))
+                .thenReturn(new User(testUserArr[2]));
+
+        userService.addNewUser(testUserArr[2]);
+        verify(mockMsgProducer, times(1)).sendEmailNotification(any(), any());
     }
 
     @Test
@@ -62,32 +62,42 @@ class UserServiceTest {
 
     @Test
     void findUserById_GetsSpecifiedUserObj() {
-        when(mockUserRepository.findById(eq(3L))).thenReturn(Optional.of(testUserArr[2]));
-        UserDto tempDto = userService.findUserById(3L).get();
+        when(mockUserRepository.findById(eq(3L)))
+                .thenReturn(Optional.of(
+                        new User(testUserArr[2])));
+
+        UserResponseDto tempDto = userService.findUserById(3L).get();
         assertAll("User by ID properties",
-                () -> assertEquals(testUserArr[2].getName(), tempDto.name()),
-                () -> assertEquals(testUserArr[2].getEmail(), tempDto.email()),
-                () -> assertEquals(testUserArr[2].getAge(), tempDto.age()));
+                () -> assertEquals(testUserArr[2].name(), tempDto.name()),
+                () -> assertEquals(testUserArr[2].email(), tempDto.email()),
+                () -> assertEquals(testUserArr[2].age(), tempDto.age()));
     }
 
     @Test
     void getListOfUsers() {
-        when(mockUserRepository.findAll()).thenReturn(List.of(testUserArr));
+        when(mockUserRepository.findAll()).thenReturn(
+                Arrays.stream(testUserArr)
+                        .map(User::new)
+                        .toList());
         assertEquals(4, userService.getListOfUsers().size());
     }
 
     @Test
     void updateUserRecord_CallsUpdateMethod() {
-        when(mockUserRepository.findById(any())).thenReturn(Optional.of(testUserArr[0]));
-        when(mockUserRepository.save(any())).thenReturn(testUserArr[0]);
-        userService.updateUserWithId(1L, UserDto.fromEntity(testUserArr[0]));
-        userService.updateUserWithId(3L, UserDto.fromEntity(testUserArr[2]));
+        when(mockUserRepository.findById(any()))
+                .thenReturn(Optional.of(new User(testUserArr[0])));
+        when(mockUserRepository.save(any()))
+                .thenReturn(new User(testUserArr[0]));
+
+        userService.updateUserWithId(1L, testUserArr[0]);
+        userService.updateUserWithId(3L, testUserArr[2]);
         verify(mockUserRepository, times(2)).save(any(User.class));
     }
 
     @Test
     void updateUserWithId_NullArgThrowsException() {
-        when(mockUserRepository.findById(eq(1L))).thenReturn(Optional.of(testUserArr[0]));
+        when(mockUserRepository.findById(eq(1L)))
+                .thenReturn(Optional.of(new User(testUserArr[0])));
         assertThrowsExactly(NullPointerException.class, () -> userService.updateUserWithId(1L,null));
     }
 
@@ -107,5 +117,29 @@ class UserServiceTest {
             userService.removeUserById(400);
         }, "Не бросает ошибку при попытки удаления не существующего элемента");
         verify(mockUserRepository, times(4)).deleteById(any());
+    }
+
+    @Test
+    void getAndRemoveUserById_CallsDeleteOnlyIfUserIsFound() {
+        when(mockUserRepository.findById(eq(10L)))
+                .thenReturn(Optional.empty());
+        when(mockUserRepository.findById(eq(3L)))
+                .thenReturn(Optional.of(new User(testUserArr[3])));
+        userService.getAndRemoveUserById(10);
+        userService.getAndRemoveUserById(3);
+        verify(mockUserRepository, times(1)).delete(any(User.class));
+    }
+
+    @Test
+    void getAndRemoveUserById_SendsMailIfUserIsDeleted() {
+        when(mockUserRepository.findById(any()))
+                .thenReturn(Optional.of(new User(testUserArr[3])));
+        when(mockUserRepository.findById(eq(10L)))
+                .thenReturn(Optional.empty());
+
+        userService.getAndRemoveUserById(1);
+        userService.getAndRemoveUserById(3);
+        userService.getAndRemoveUserById(10);
+        verify(mockMsgProducer, times(2)).sendEmailNotification(any(), any());
     }
 }
