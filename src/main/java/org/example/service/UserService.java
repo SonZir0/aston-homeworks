@@ -1,6 +1,7 @@
 package org.example.service;
 
-import org.example.dto.UserDto;
+import org.example.dto.UserRequestDto;
+import org.example.dto.UserResponseDto;
 import org.example.models.User;
 import org.example.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,35 +14,49 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final EmailNotificationProducer msgProducer;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, EmailNotificationProducer msgProducer) {
         this.userRepository = userRepository;
+        this.msgProducer = msgProducer;
     }
 
-    public UserDto addNewUser(UserDto newUserData) {
-        return UserDto.fromEntity(
-                userRepository.save(
-                        new User(Objects.requireNonNull(newUserData))));
+    public UserResponseDto addNewUser(UserRequestDto newUserData) {
+        User temp = userRepository.save( new User(Objects.requireNonNull(newUserData)) );
+        msgProducer.sendEmailNotification(temp.getEmail(),
+                "Здравствуйте! Ваш аккаунт на сайте был успешно создан.");
+
+        return UserResponseDto.fromEntity(temp);
     }
 
-    public Optional<UserDto> updateUserWithId(long id, UserDto newUserData) {
+    public Optional<UserResponseDto> updateUserWithId(long id, UserRequestDto newUserData) {
         return userRepository.findById(id).
                 map((user) -> {
                     user.updateWithValuesFrom(Objects.requireNonNull(newUserData));
-                    return UserDto.fromEntity(userRepository.save(user));
+                    return UserResponseDto.fromEntity(userRepository.save(user));
         });
     }
 
-    public Optional<UserDto> findUserById(long id) {
+    public Optional<UserResponseDto> findUserById(long id) {
         return userRepository.findById(id)
-                .map(UserDto::fromEntity);
+                .map(UserResponseDto::fromEntity);
     }
 
-    public List<UserDto> getListOfUsers() {
+    public List<UserResponseDto> getListOfUsers() {
         return userRepository.findAll().stream()
-                .map(UserDto::fromEntity).
+                .map(UserResponseDto::fromEntity).
                 toList();
+    }
+
+    public Optional<UserResponseDto> getAndRemoveUserById(long id) {
+        return userRepository.findById(id)
+                .map((user -> {
+                    userRepository.delete(user);
+                    msgProducer.sendEmailNotification( user.getEmail(),
+                            "Здравстувуйте! Ваш аккаунт был удален");
+                    return UserResponseDto.fromEntity(user);
+                }));
     }
 
     public void removeUserById(long id) {

@@ -1,7 +1,7 @@
 package org.example.models;
 
 import jakarta.persistence.*;
-import org.example.dto.UserDto;
+import org.example.dto.UserRequestDto;
 
 import java.time.LocalDate;
 
@@ -29,11 +29,11 @@ public class User {
         this.createdAt = LocalDate.now();
     }
 
-    public User(UserDto userDto) {
+    public User(UserRequestDto userDto) {
         this(userDto.name(), userDto.email(), userDto.age());
     }
 
-    public void updateWithValuesFrom(UserDto copyValuesFrom) {
+    public void updateWithValuesFrom(UserRequestDto copyValuesFrom) {
         if (copyValuesFrom == null) throw new IllegalArgumentException();
         this.name = copyValuesFrom.name();
         this.email = copyValuesFrom.email();
