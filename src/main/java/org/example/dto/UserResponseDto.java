@@ -1,8 +1,10 @@
 package org.example.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.example.models.User;
 import java.time.LocalDate;
 
+@Schema(description = "Ответ с информацией о пользователе")
 public record UserResponseDto(
         long id,
         String name,
