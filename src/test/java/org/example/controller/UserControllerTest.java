@@ -1,13 +1,16 @@
 package org.example.controller;
 
 import org.example.dto.UserResponseDto;
+import org.example.mapper.UserHateoasModelAssembler;
 import org.example.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
@@ -21,13 +24,15 @@ import java.util.Optional;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
+@Import(UserHateoasModelAssembler.class)
 public class UserControllerTest {
     @MockitoBean
     UserService userService;
+    @MockitoSpyBean
+    UserHateoasModelAssembler modelAssembler;
 
     @Autowired
     MockMvc mockMvc;
@@ -87,15 +92,13 @@ public class UserControllerTest {
     }
 
     @Test
-    void updateUserRecordTest_EmptyResponseIfNoUserFound() throws Exception {
+    void updateUserRecordTest_NotFoundStatusIfUserDoesNotExist() throws Exception {
         Mockito.when(userService.updateUserWithId(eq(999L), any())).thenReturn(Optional.empty());
 
         mockMvc.perform(put("/api/users/999")
                         .content(objectMapper.writeValueAsString(testDataArr[0]))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").doesNotExist());
-
+                .andExpect(status().isNotFound());
         verify(userService, times(1)).updateUserWithId(eq(999L), any());
     }
 
@@ -114,11 +117,10 @@ public class UserControllerTest {
     }
 
     @Test
-    void findUserByIdTest_EmptyIfUserDoesNotExist() throws Exception {
+    void findUserByIdTest_NotFoundStatusIfUserDoesNotExist() throws Exception {
         Mockito.when(userService.findUserById(999L)).thenReturn(Optional.empty());
         mockMvc.perform(get("/api/users/999"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").doesNotExist());
+                .andExpect(status().isNotFound());
 
         verify(userService, times(1)).findUserById(999L);
     }
@@ -128,17 +130,20 @@ public class UserControllerTest {
         Mockito.when(userService.getListOfUsers()).thenReturn(List.of(testDataArr));
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3));
+                .andExpect(jsonPath("$._embedded.userResponseDtoList.length()").value(3))
+                .andExpect(jsonPath("$._links.self.href").isNotEmpty());
 
         verify(userService, times(1)).getListOfUsers();
     }
 
     @Test
-    void removeUserRecordByIdTest_IsIdempotent() throws Exception {
+    void removeUserRecordByIdTest_NotFoundStatusIfUserDoesNotExist() throws Exception {
+        Mockito.when(userService.getAndRemoveUserById(2L)).thenReturn(Optional.of(testDataArr[1]))
+                .thenReturn(Optional.empty());
         mockMvc.perform(delete("/api/users/2"))
                 .andExpect(status().isOk());
         mockMvc.perform(delete("/api/users/2"))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
 
         verify(userService, times(2)).getAndRemoveUserById(2);
     }
