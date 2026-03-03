@@ -1,47 +1,76 @@
 package org.example.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.dto.UserRequestDto;
 import org.example.dto.UserResponseDto;
+import org.example.exceptions.UserNotFoundException;
+import org.example.mapper.UserHateoasModelAssembler;
 import org.example.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("api/")
+@Tag(name = "Пользователи", description = "Все методы для работы с пользователями системы")
 public class UserController {
     private UserService userService;
+    private UserHateoasModelAssembler modelAssembler;
 
     @Autowired
-    UserController(UserService userService) {
+    UserController(UserService userService, UserHateoasModelAssembler modelAssembler) {
         this.userService = userService;
+        this.modelAssembler = modelAssembler;
     }
 
     @PostMapping("users")
-    public UserResponseDto addNewUser(@Valid @RequestBody UserRequestDto newUserDto) {
-        return userService.addNewUser(newUserDto);
+    @Operation(summary = "Добавить нового пользователя")
+    public EntityModel<UserResponseDto> addNewUser(@Valid @RequestBody UserRequestDto newUserDto) {
+        UserResponseDto responseDto = userService.addNewUser(newUserDto);
+        return modelAssembler.toModel(responseDto);
     }
 
     @PutMapping("users/{id}")
-    public UserResponseDto updateUserRecord(@PathVariable(value = "id") long userId,
+    @Operation(summary = "Обновить данные пользователя с ID")
+    public EntityModel<UserResponseDto> updateUserRecord(@PathVariable(value = "id") long userId,
                                             @Valid @RequestBody UserRequestDto userData) {
-        return userService.updateUserWithId(userId, userData).orElse(null);
+        UserResponseDto responseDto = userService.updateUserWithId(userId, userData)
+                .orElseThrow( () -> new UserNotFoundException(userId));
+        return modelAssembler.toModel(responseDto);
     }
 
     @GetMapping("users/{id}")
-    public UserResponseDto findUserById(@PathVariable(value= "id") long userId) {
-        return userService.findUserById(userId).orElse(null);
+    @Operation(summary = "Получить информацию о пользователе с ID")
+    public EntityModel<UserResponseDto> findUserById(@PathVariable(value= "id") long userId) {
+        UserResponseDto responseDto = userService.findUserById(userId)
+                .orElseThrow( () -> new UserNotFoundException(userId));
+        return modelAssembler.toModel(responseDto);
     }
 
     @GetMapping("users")
-    public List<UserResponseDto> getListOfUsers() {
-        return userService.getListOfUsers();
+    @Operation(summary = "Получить информацию о всех пользователях")
+    public CollectionModel<EntityModel<UserResponseDto>> getListOfUsers() {
+        List<EntityModel<UserResponseDto>> users = userService.getListOfUsers()
+                .stream()
+                .map(modelAssembler::toModel)
+                .collect(Collectors.toList());
+        return CollectionModel.of(users, linkTo(methodOn(UserController.class).getListOfUsers()).withSelfRel());
     }
 
     @DeleteMapping("users/{id}")
-    public UserResponseDto removeUserRecordById(@PathVariable(value = "id") long userId) {
-        return userService.getAndRemoveUserById(userId).orElse(null);
+    @Operation(summary = "Удалить из системы пользователя с ID")
+    public EntityModel<UserResponseDto> removeUserRecordById(@PathVariable(value = "id") long userId) {
+        UserResponseDto responseDto = userService.getAndRemoveUserById(userId)
+                .orElseThrow( () -> new UserNotFoundException(userId));
+        return EntityModel.of(responseDto, linkTo(methodOn(UserController.class).getListOfUsers()).withRel("users"));
     }
 }
