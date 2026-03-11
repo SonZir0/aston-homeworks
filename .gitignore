@@ -33,3 +33,5 @@ bin/
 *iml
 target/
 logs/
+
+notification-service/data/mailpit.db

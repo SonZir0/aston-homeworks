@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  zookeeper1:
+  zookeeper:
     image: wurstmeister/zookeeper
     ports:
       - 2181:2181
@@ -12,7 +12,7 @@ services:
       timeout: 5s
       retries: 3
 
-  kafka1:
+  kafka:
     image: wurstmeister/kafka
     container_name: kafka
     ports:
@@ -21,7 +21,7 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: localhost
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     depends_on:
-      zookeeper1:
+      zookeeper:
         condition: service_healthy
 
   mailpit:
@@ -36,6 +36,6 @@ services:
       - 1025:1025   # SMTP port
     environment:
       MP_MAX_MESSAGES: 5000
-      MP_DATABASE: /notification-service-submodule/data/mailpit.db
+      MP_DATABASE: /data/mailpit.db
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
