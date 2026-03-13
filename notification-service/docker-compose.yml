@@ -5,7 +5,7 @@ services:
     image: wurstmeister/zookeeper
     ports:
       - 2181:2181
-    container_name: zookeeper
+    container_name: zookeeperX
     healthcheck:
       test: nc -z localhost 2181 || exit -1
       interval: 10s
@@ -14,7 +14,7 @@ services:
 
   kafka:
     image: wurstmeister/kafka
-    container_name: kafka
+    container_name: kafkaX
     ports:
       - 9092:9092
     environment:
@@ -26,7 +26,7 @@ services:
 
   mailpit:
     image: axllent/mailpit
-    container_name: mailpit
+    container_name: mailpitX
     restart: unless-stopped
     volumes:
       - ./data:/data
@@ -39,3 +39,4 @@ services:
       MP_DATABASE: /data/mailpit.db
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_VERBOSE: true

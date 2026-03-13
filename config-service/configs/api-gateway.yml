@@ -3,8 +3,8 @@ server:
 
 spring:
   cloud:
-    config:
-      fail-fast: true
+    #config:
+      #fail-fast: true
     gateway:
       server:
         webflux:
