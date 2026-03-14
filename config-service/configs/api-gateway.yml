@@ -1,0 +1,61 @@
+server:
+  port: 8765
+
+spring:
+  cloud:
+    config:
+      fail-fast: true
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: user-service-route
+              filters:
+                - args:
+                    fallbackUri: forward:/fallback
+                    name: userServiceCB
+                  name: CircuitBreaker
+              predicates:
+                - Path=/api/users/**
+              uri: lb://user-service
+            - id: notification-service-route
+              filters:
+                - args:
+                    fallbackUri: forward:/fallback
+                    name: notificationServiceCB
+                  name: CircuitBreaker
+              predicates:
+                - Path=/api/sendMailTo
+              uri: lb://notification-service
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 10s
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    config-url: /v3/api-docs/swagger-config
+    enabled: true
+    urls:
+      - name: gateway API
+        url: /v3/api-docs
+      - name: user-service API
+        url: /user-service/v3/api-docs

@@ -1,0 +1,21 @@
+# space for new cloud specific settings?
+
+# all settings below are present in service's local configuration file (values might differ)
+server:
+  port: 0
+
+app:
+  kafka:
+    topics:
+      my-topic: emailNotifications
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+  mail:
+    host: localhost
+    port: 1025
