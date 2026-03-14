@@ -1,8 +1,6 @@
 services:
   config-server:
     container_name: config-server
-    environment:
-      CONFIG_PORT: 8888
     build:
       context: "./config-service"
       dockerfile: Dockerfile
@@ -62,7 +60,8 @@ services:
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      SPRING_MAIL_HOST: mailpit
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     build:
       context: "./notification-service"
       dockerfile: Dockerfile
@@ -72,8 +71,6 @@ services:
       eureka-server:
         condition: service_healthy
       kafka:
-        condition: service_healthy
-      mailpit:
         condition: service_healthy
 
   api-gateway:
@@ -148,28 +145,5 @@ services:
       zookeeper:
         condition: service_healthy
 
-  mailpit:
-    image: axllent/mailpit
-    container_name: mailpit
-    restart: unless-stopped
-    volumes:
-      - mailpit_data:/data
-    ports:
-      - "8025:8025"
-      - "1025:1025"
-    environment:
-      MP_MAX_MESSAGES: 5000
-      MP_DATABASE: ./data/mailpit.db
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
-      MP_VERBOSE: true
-    healthcheck:
-      test: ["CMD", "/mailpit", "readyz"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
 volumes:
   postgres_data:
-  mailpit_data:
