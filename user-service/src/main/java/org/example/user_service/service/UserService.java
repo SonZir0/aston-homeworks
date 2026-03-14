@@ -54,7 +54,7 @@ public class UserService {
                 .map((user -> {
                     userRepository.delete(user);
                     msgProducer.sendEmailNotification( user.getEmail(),
-                            "Здравстувуйте! Ваш аккаунт был удален");
+                            "Здравствуйте! Ваш аккаунт был удален");
                     return UserResponseDto.fromEntity(user);
                 }));
     }

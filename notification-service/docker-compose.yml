@@ -23,20 +23,3 @@ services:
     depends_on:
       zookeeper:
         condition: service_healthy
-
-  mailpit:
-    image: axllent/mailpit
-    container_name: mailpitX
-    restart: unless-stopped
-    volumes:
-      - ./data:/data
-    ports:
-      - 8025:8025   # web UI port - http://localhost:8025. To view specific mail: <Mailpit URL>/view/<ID>.(html|txt)
-                    # We can substitute ID with "latest", e.g. http://localhost:8025/view/latest.html
-      - 1025:1025   # SMTP port
-    environment:
-      MP_MAX_MESSAGES: 5000
-      MP_DATABASE: /data/mailpit.db
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
-      MP_VERBOSE: true

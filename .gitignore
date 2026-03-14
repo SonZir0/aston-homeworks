@@ -35,3 +35,4 @@ target/
 logs/
 
 notification-service/data
+.env
