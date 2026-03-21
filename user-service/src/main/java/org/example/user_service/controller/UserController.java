@@ -21,6 +21,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("api/")
+@CrossOrigin("*")
 @Tag(name = "Пользователи", description = "Все методы для работы с пользователями системы")
 public class UserController {
     private UserService userService;

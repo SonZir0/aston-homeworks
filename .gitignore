@@ -33,3 +33,6 @@ bin/
 *iml
 target/
 logs/
+
+notification-service/data
+.env

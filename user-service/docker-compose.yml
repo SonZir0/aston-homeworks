@@ -3,6 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:18
+    container_name: postgresX
     environment:
       POSTGRES_DB: MyDB
       POSTGRES_USER: postgres
